@@ -15,7 +15,47 @@
 #include <log/log.hpp>
 #include <magic_enum.hpp>
 
+#include <battery_charger/battery_charger.hpp>
+#include <vector>
+#include <numeric>
+#include <chrono>
+#include <timers.h>
+
 using sevm::battery::BatteryController;
+
+namespace test
+{
+    using namespace std::chrono_literals;
+    constexpr auto samplingTime = 100ms;
+    TimerHandle_t samplingTimerHandle;
+
+    std::vector<int> data{};
+
+    float getAverageData()
+    {
+        if (data.empty()) {
+            return 0;
+        }
+        auto const count = static_cast<float>(data.size());
+        return std::reduce(data.begin(), data.end()) / count;
+    }
+    void clearData()
+    {
+        data.clear();
+    }
+    static void addSample(TimerHandle_t xTimer)
+    {
+        data.push_back(bsp::battery_charger::getAvgCurrent());
+    }
+    void start()
+    {
+        if (samplingTimerHandle == nullptr) {
+            samplingTimerHandle =
+                xTimerCreate("samplingTimer", pdMS_TO_TICKS(samplingTime.count()), true, nullptr, addSample);
+        }
+        xTimerStart(samplingTimerHandle, 0);
+    }
+} // namespace test
 
 namespace
 {
@@ -92,6 +132,8 @@ BatteryController::BatteryController(sys::Service *service, xQueueHandle notific
     LOG_INFO("Initial battery SOC:%d", Store::Battery::get().level);
     LOG_INFO("Initial battery voltage:%" PRIu32 "mV", charger->getBatteryVoltage());
     LOG_INFO("Initial battery state:%s", magic_enum::enum_name(Store::Battery::get().levelState).data());
+
+    test::start();
 }
 
 void sevm::battery::BatteryController::handleNotification(Events evt)
@@ -117,11 +159,14 @@ void sevm::battery::BatteryController::poll()
 }
 void sevm::battery::BatteryController::printCurrentState()
 {
-    LOG_INFO("Charger state:%s Battery SOC %d voltage: %" PRIu32 "mV state: %s",
+    const auto avCurrent = test::getAverageData();
+    test::clearData();
+    LOG_INFO("Charger state:%s Battery SOC %d voltage: %" PRIu32 "mV state: %s avCurrent: %0.1f mA",
              magic_enum::enum_name(Store::Battery::get().state).data(),
              Store::Battery::get().level,
              charger->getBatteryVoltage(),
-             magic_enum::enum_name(Store::Battery::get().levelState).data());
+             magic_enum::enum_name(Store::Battery::get().levelState).data(),
+             avCurrent);
 }
 void sevm::battery::BatteryController::update()
 {
