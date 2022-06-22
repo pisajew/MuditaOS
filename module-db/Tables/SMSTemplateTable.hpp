@@ -14,6 +14,7 @@ struct SMSTemplateTableRow : public Record
 {
     UTF8 text;
     time_t lastUsageTimestamp = 0;
+    uint32_t order            = 0;
 };
 
 enum class SMSTemplateTableFields
@@ -23,7 +24,7 @@ enum class SMSTemplateTableFields
 class SMSTemplateTable : public Table<SMSTemplateTableRow, SMSTemplateTableFields>
 {
   public:
-    SMSTemplateTable(Database *db);
+    explicit SMSTemplateTable(Database *db);
     virtual ~SMSTemplateTable();
 
     bool create() override final;

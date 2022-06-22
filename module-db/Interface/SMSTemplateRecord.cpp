@@ -19,6 +19,7 @@ SMSTemplateRecord::SMSTemplateRecord(const SMSTemplateTableRow &w)
     ID                 = w.ID;
     text               = w.text;
     lastUsageTimestamp = w.lastUsageTimestamp;
+    order              = w.order;
 }
 
 SMSTemplateRecordInterface::SMSTemplateRecordInterface(SmsDB *smsDb) : smsDB(smsDb)
@@ -55,9 +56,11 @@ bool SMSTemplateRecordInterface::Update(const SMSTemplateRecord &rec)
     if (templ.ID == DB_ID_NONE) {
         return false;
     }
+    auto templateText  = rec.text.empty() ? templ.text : rec.text;
+    auto templateOrder = rec.order == 0 ? templ.order : rec.order;
 
-    return smsDB->templates.update(
-        SMSTemplateTableRow{Record(rec.ID), .text = rec.text, .lastUsageTimestamp = rec.lastUsageTimestamp});
+    return smsDB->templates.update(SMSTemplateTableRow{
+        Record(rec.ID), .text = templateText, .lastUsageTimestamp = rec.lastUsageTimestamp, .order = templateOrder});
 }
 
 bool SMSTemplateRecordInterface::RemoveByID(uint32_t id)
