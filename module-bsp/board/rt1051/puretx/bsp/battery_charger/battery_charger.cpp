@@ -17,6 +17,7 @@
 #include <fstream>
 #include <map>
 #include <log/log.hpp>
+#include <vector>
 
 namespace bsp::battery_charger
 {
@@ -314,14 +315,36 @@ namespace bsp::battery_charger
                 return batteryRetval::ChargerError;
             }
 
+            std::vector<std::uint16_t> dataToStore;
             for (unsigned int i = 0; i < registersToStore; ++i) {
                 auto regVal = fuelGaugeRead(static_cast<Registers>(i));
                 if (regVal.first != kStatus_Success) {
                     LOG_ERROR("Reading register 0x%x failed.", i);
+                    file.close();
                     return batteryRetval::ChargerError;
                 }
                 file.write(reinterpret_cast<const char *>(&regVal.second), sizeof(std::uint16_t));
+                dataToStore.push_back(regVal.second);
             }
+            file.close();
+
+            std::ifstream readFile(cfgFile.c_str(), std::ios::binary | std::ios::in);
+            if (!readFile.is_open()) {
+                LOG_WARN("Configuration file [%s] could not be opened.", cfgFile.c_str());
+                return batteryRetval::ChargerError;
+            }
+
+            std::uint16_t savedRegValue;
+            for (unsigned int i = 0; i < registersToStore; ++i) {
+                readFile.read(reinterpret_cast<char *>(&savedRegValue), sizeof(savedRegValue));
+                if (savedRegValue != dataToStore[i]) {
+                    LOG_ERROR("Store verification 0x%x failed. Value read from file: %d from REG: %d",
+                              i,
+                              savedRegValue,
+                              dataToStore[i]);
+                }
+            }
+            readFile.close();
 
             return batteryRetval::OK;
         }
