@@ -158,9 +158,13 @@ namespace hal::battery
     std::optional<AbstractBatteryCharger::SOC> PureBatteryCharger::getSOC() const
     {
         const auto soc        = bsp::battery_charger::getBatteryLevel();
-        const auto scaled_soc = scale_soc(soc);
+        if (not soc) {
+            LOG_ERROR("SOC is out of valid range.");
+            return std::nullopt;
+        }
+        const auto scaled_soc = scale_soc(soc.value());
         if (not scaled_soc) {
-            LOG_ERROR("SOC is out of valid range. SoC: %d", soc);
+            LOG_ERROR("SOC is out of valid range. SoC: %d", soc.value());
             return std::nullopt;
         }
         const auto current_percent = Store::Battery::get().level;

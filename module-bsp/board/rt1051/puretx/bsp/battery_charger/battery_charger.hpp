@@ -6,6 +6,7 @@
 #include "MAX77818.hpp"
 
 #include <cstdint>
+#include <optional>
 
 namespace bsp::battery_charger
 {
@@ -63,7 +64,7 @@ namespace bsp::battery_charger
 
     void deinit();
 
-    StateOfCharge getBatteryLevel();
+    std::optional<StateOfCharge> getBatteryLevel();
 
     void storeBatteryLevelChange(const std::uint16_t currentLevel, const std::uint16_t updatedLevel);
 

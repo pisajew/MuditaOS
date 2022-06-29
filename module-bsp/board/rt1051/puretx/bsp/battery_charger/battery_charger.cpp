@@ -567,7 +567,7 @@ namespace bsp::battery_charger
 
         // Short time to synchronize after configuration
         vTaskDelay(pdMS_TO_TICKS(100));
-        StateOfCharge level = getBatteryLevel();
+        auto level = getBatteryLevel().value();
 
         clearAllChargerIRQs();
         clearFuelGuageIRQ(static_cast<std::uint16_t>(batteryINTBSource::all));
@@ -602,11 +602,12 @@ namespace bsp::battery_charger
         }
     }
 
-    StateOfCharge getBatteryLevel()
+    std::optional<StateOfCharge> getBatteryLevel()
     {
         auto readout = fuelGaugeRead(Registers::RepSOC_REG);
         if (readout.first != kStatus_Success) {
             LOG_ERROR("failed to get battery percent");
+            return std::nullopt;
         }
 
         /// 16 bit result. The high byte indicates 1% per LSB. The low byte reports fractional percent. We don't care
@@ -750,6 +751,6 @@ namespace bsp::battery_charger
         LOG_INFO("\tMaxVolt: %dmV", maxMinVolt.maxMilliVolt);
         LOG_INFO("\tMinVolt: %dmV", maxMinVolt.minMilliVolt);
         LOG_INFO("\tAvgCurrent: %dmA", getAvgCurrent());
-        LOG_INFO("\tLevel: %d%%", getBatteryLevel());
+        LOG_INFO("\tLevel: %d%%", getBatteryLevel().value());
     }
 } // namespace bsp::battery_charger
