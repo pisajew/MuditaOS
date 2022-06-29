@@ -38,7 +38,7 @@ namespace bsp::battery_charger
         constexpr std::uint16_t nominalCapacitymAh = 1600;
 
         constexpr std::uint16_t fullyChargedSOC   = 100;
-        constexpr std::uint16_t percentLevelDelta = 5;
+        constexpr std::uint16_t percentLevelDelta = 1;
 
         constexpr std::uint16_t maxVoltagemV = 4400;
         constexpr std::uint16_t minVoltagemV = 3600;
@@ -567,13 +567,14 @@ namespace bsp::battery_charger
         gpio.reset();
     }
 
-    void evaluateBatteryLevelChange(const std::uint16_t currentLevel, const std::uint16_t updatedLevel)
+    void storeBatteryLevelChange(const std::uint16_t currentLevel, const std::uint16_t updatedLevel)
     {
         if (currentLevel == updatedLevel) {
             return;
         }
 
         if ((updatedLevel % percentLevelDelta) == 0) {
+            LOG_DEBUG("UpdateBatteryCFG: curr %d new %d", currentLevel, updatedLevel);
             storeConfiguration();
         }
     }

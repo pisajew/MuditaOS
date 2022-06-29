@@ -17,6 +17,7 @@
 #include <bsp/battery_charger/battery_charger.hpp>
 #include <log/log.hpp>
 #include <magic_enum.hpp>
+#include <EventStore.hpp>
 
 namespace
 {
@@ -162,6 +163,9 @@ namespace hal::battery
             LOG_ERROR("SOC is out of valid range. SoC: %d", soc);
             return std::nullopt;
         }
+        const auto current_percent = Store::Battery::get().level;
+        bsp::battery_charger::storeBatteryLevelChange(current_percent, scaled_soc.value());
+
         return scaled_soc;
     }
     AbstractBatteryCharger::ChargingStatus PureBatteryCharger::getChargingStatus() const
