@@ -39,6 +39,7 @@
 * Fixed windows flow regarding PUK requests after too many PIN mistakes
 
 ### Added
+* Added a popup for changing the SIM card
 * Added tethering information on the status bar
 * Added basic MMS handling
 * Added run-time statistics for tasks
