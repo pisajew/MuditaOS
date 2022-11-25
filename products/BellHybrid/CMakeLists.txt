@@ -31,12 +31,6 @@ target_include_directories(BellHybrid
         ${CMAKE_BINARY_DIR}
 )
 
-set_target_properties(BellHybrid
-    PROPERTIES
-        SUFFIX ".elf"
-        LINK_FLAGS "-Xlinker -Map=${CMAKE_BINARY_DIR}/BellHybrid.map "
-    )
-
 target_link_libraries(BellHybrid
     PRIVATE
         appmgr
@@ -66,7 +60,6 @@ target_link_libraries(BellHybrid
         platform
         version-header
         pure-core
-        "$<$<STREQUAL:${PROJECT_TARGET},TARGET_Linux>:iosyscalls>"
         "$<$<STREQUAL:${PROJECT_TARGET},TARGET_RT1051>:CrashCatcher::CrashCatcher>"
     )
 
