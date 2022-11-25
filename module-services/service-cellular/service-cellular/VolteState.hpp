@@ -15,6 +15,6 @@ namespace cellular
             SwitchingToOn,
             Undefined
         } enablement   = Enablement::Undefined;
-        bool permitted = true; // TODO: MOS-825, now available by default for testing purposes
+        bool permitted = false;
     };
 }

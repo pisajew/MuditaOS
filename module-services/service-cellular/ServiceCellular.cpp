@@ -613,7 +613,8 @@ void ServiceCellular::registerMessageHandlers()
         settings->setValue(
             settings::Cellular::volteEnabled, message->enable ? "1" : "0", settings::SettingsScope::Global);
         try {
-            if (not priv->volteHandler->switchVolte(*channel, message->enable)) {
+            // here we always assume that VoLTE is permitted as changing the setting when not permitted is made impossible by the GUI
+            if (not priv->volteHandler->switchVolte(*channel, true, message->enable)) {
                 auto notification =
                     std::make_shared<cellular::VolteStateNotification>(priv->volteHandler->getVolteState());
                 bus.sendMulticast(std::move(notification), sys::BusChannel::ServiceCellularNotifications);
@@ -912,11 +913,12 @@ bool ServiceCellular::handle_cellular_priv_init()
 
     priv->privInit(channel);
 
+    auto permitVolte = priv->volteCapability->isVolteAllowed(*channel);
     auto enableVolte =
         settings->getValue(settings::Cellular::volteEnabled, settings::SettingsScope::Global) == "1" ? true : false;
     bool volteNeedReset = false;
     try {
-        volteNeedReset    = !priv->volteHandler->switchVolte(*channel, enableVolte);
+        volteNeedReset    = !priv->volteHandler->switchVolte(*channel, permitVolte, enableVolte);
         auto notification = std::make_shared<cellular::VolteStateNotification>(priv->volteHandler->getVolteState());
         bus.sendMulticast(std::move(notification), sys::BusChannel::ServiceCellularNotifications);
     }
